@@ -1,0 +1,29 @@
+<div class="promoter-list">
+--- Start ContentElement ---
+    <?php
+    // for full var_dump uncomment ini_set
+    ini_set('xdebug.var_display_max_depth', -1);
+    ini_set('xdebug.var_display_max_children', -1);
+    ini_set('xdebug.var_display_max_data', -1);
+
+    //var_dump($this->portfolios);
+    //var_dump($this->pins);
+    $portfolios = $this->portfolios;
+
+    if(isset($portfolios)){
+        foreach ($portfolios as $portfolio){
+            ?>
+            <div class="promoter-element">
+                <div class="title"><?=$portfolio->title?></div>
+                <div class="detail"><a href="{{link_url::11}}?id=<?=$portfolio->id?>">Detailansicht</a></div>
+            </div>
+            <br>
+            <?php
+        }
+    }
+    ?>
+
+
+--- Ende ContentElement ---
+</div>
+

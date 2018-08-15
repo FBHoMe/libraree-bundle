@@ -1,6 +1,5 @@
 {
     "name": "home/libraree-bundle",
-    "version": "1.0.0",
     "type": "contao-bundle",
     "description": "Adds Libraree to Contao 4",
     "keywords":["contao","libraree"],
@@ -12,7 +11,7 @@
         }
     ],
     "require": {
-        "php": "^5.6",
+        "php": "^5.6|^7.1",
         "contao/core-bundle": "^4.4.2"
     },
     "autoload": {

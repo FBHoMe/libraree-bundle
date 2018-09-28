@@ -11,7 +11,7 @@ namespace Home\LibrareeBundle\Resources\contao\elements;
 use Home\LibrareeBundle\Resources\contao\models\ProducteePortfolioModel;
 use Home\LibrareeBundle\Resources\contao\models\ProducteePinModel;
 
-class BaseListElement extends \ContentElement
+class BaseListElement extends \Contao\ContentElement
 {
     /**
      * @var string
@@ -66,7 +66,7 @@ class BaseListElement extends \ContentElement
      */
     private function findAllPortfolios()
     {
-        return ProducteePortfolioModel::findAll();
+        return null;
     }
 
 
@@ -87,12 +87,11 @@ class BaseListElement extends \ContentElement
             }
         }
 
-        if(count($pids) > 0){
-            return ProducteePinModel::findBy(array(
-                ProducteePinModel::getTable() . ".pid IN('" . implode("','", $pids) . "')"), null
+        /*if(count($pids) > 0){
+            return Model::findBy(array(
+                Model::getTable() . ".pid IN('" . implode("','", $pids) . "')"), null
             );
-
-        }
+        }*/
 
         return false;
     }

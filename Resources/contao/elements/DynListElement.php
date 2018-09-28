@@ -46,7 +46,7 @@ class DynListElement extends BaseListElement
     private function generateFrontend()
     {
         if (!isset($_GET['item']) && \Config::get('useAutoItem') && isset($_GET['auto_item'])) {
-            \Input::setGet('item', \Input::get('auto_item'));
+            \Contao\Input::setGet('item', \Contao\Input::get('auto_item'));
         }
 
         if($_GET['auto_item']){

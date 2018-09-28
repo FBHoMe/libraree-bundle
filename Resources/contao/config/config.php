@@ -49,10 +49,10 @@ array_insert($GLOBALS['TL_CTE'], 2, array
 #-- add modules --------------------------------------------------------------------------------------------------------
 array_insert($GLOBALS['FE_MOD'], 2, array
 (
-    /*'libraree' => array
+    'libraree' => array
     (
         'mod_nav_libraree'     => 'Home\LibrareeBundle\Resources\contao\modules\NavigationModule'
-    ),*/
+    ),
 ));
 
 #-- add models ---------------------------------------------------------------------------------------------------------

@@ -8,7 +8,7 @@
 
 namespace Home\LibrareeBundle\Resources\contao\models;
 
-class BasePinModel extends \Model
+class BasePinModel extends \Contao\Model
 {
     /**
      * find pins by $strTable and $options
@@ -19,7 +19,8 @@ class BasePinModel extends \Model
      */
     public static function findByTable($strTable, $options)
     {
-        $strClass = \Model::getClassFromTable($strTable. '_pin');
+        $return = array();
+        $strClass = \Contao\Model::getClassFromTable($strTable. '_pin');
         $strModel = $strClass::findBy($options, null);
 
         if($strModel instanceof \Contao\Model\Collection){

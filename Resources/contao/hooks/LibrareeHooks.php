@@ -7,7 +7,7 @@
  */
 
 namespace Home\LibrareeBundle\Resources\contao\hooks;
-use Home\LibrareeBundle\Resources\contao\models\TuttoPinModel;
+use Home\LibrareeBundle\Resources\contao\models\BasePinModel;
 
 class LibrareeHooks extends \Frontend
 {
@@ -28,7 +28,8 @@ class LibrareeHooks extends \Frontend
             $bemerkung = $arrSubmitted['Bemerkung'];
 
             $products = array();
-            $pins = TuttoPinModel::findAll();
+            // todo replace with actual model
+            $pins = BasePinModel::findAll();
             if($pins){
                 $pins = $pins->fetchAll();
                 if(is_array($pins) && count($pins) > 0){

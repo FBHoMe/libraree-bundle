@@ -8,7 +8,7 @@
 
 namespace Home\LibrareeBundle\Resources\contao\elements;
 
-class BaseDetailElement extends \ContentElement
+class BaseDetailElement extends \Contao\ContentElement
 {
     /**
      * @var string
@@ -64,7 +64,7 @@ class BaseDetailElement extends \ContentElement
      */
     private function getById($id)
     {
-        return \Model::findByIdOrAlias($id);
+        return \Contao\Model::findByIdOrAlias($id);
     }
 
 }

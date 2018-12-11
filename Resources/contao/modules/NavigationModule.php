@@ -12,7 +12,7 @@ use Home\LibrareeBundle\Resources\contao\models\BasePinModel;
 use Home\LibrareeBundle\Resources\contao\models\BasePortfolioModel;
 
 
-class NavigationModule extends \Module
+class NavigationModule extends \Contao\Module
 {
     /**
      * @var string

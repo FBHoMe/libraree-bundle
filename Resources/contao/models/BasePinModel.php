@@ -8,6 +8,8 @@
 
 namespace Home\LibrareeBundle\Resources\contao\models;
 
+use Home\PearlsBundle\Resources\contao\Helper\DataHelper;
+
 class BasePinModel extends \Contao\Model
 {
     /**
@@ -20,11 +22,14 @@ class BasePinModel extends \Contao\Model
     public static function findByTable($strTable, $options)
     {
         $return = array();
-        $strClass = \Contao\Model::getClassFromTable($strTable. '_pin');
+        if(strpos($strTable, '_pin') === false){
+            $strTable = $strTable. '_pin';
+        }
+        $strClass = \Contao\Model::getClassFromTable($strTable);
         $strModel = $strClass::findBy($options, null);
 
         if($strModel instanceof \Contao\Model\Collection){
-            $return = $strModel->fetchAll();
+            $return = DataHelper::convertValue($strModel->fetchAll());
         }
 
         return $return;

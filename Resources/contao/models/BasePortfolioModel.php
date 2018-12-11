@@ -8,7 +8,9 @@
 
 namespace Home\LibrareeBundle\Resources\contao\models;
 
-class BasePortfolioModel extends \Model
+use Home\PearlsBundle\Resources\contao\Helper\DataHelper;
+
+class BasePortfolioModel extends \Contao\Model
 {
     /**
      * find portfolios by $strTable and $options
@@ -19,11 +21,15 @@ class BasePortfolioModel extends \Model
      */
     public static function findByTable($strTable, $options)
     {
-        $strClass = \Model::getClassFromTable($strTable. '_portfolio');
+        $return = array();
+        if(strpos($strTable, '_portfolio') === false){
+            $strTable = $strTable. '_portfolio';
+        }
+        $strClass = \Contao\Model::getClassFromTable($strTable);
         $strModel = $strClass::findBy($options, null);
 
         if($strModel instanceof \Contao\Model\Collection){
-            $return = $strModel->fetchAll();
+            $return = DataHelper::convertValue($strModel->fetchAll());
         }
 
         return $return;
@@ -68,7 +74,7 @@ class BasePortfolioModel extends \Model
             ->prepare($sqlQuery)
             ->execute()
         ;
-        return $objResult->fetchAllAssoc();
+        return DataHelper::convertValue($objResult->fetchAllAssoc());
     }
 
     /**
@@ -89,7 +95,7 @@ class BasePortfolioModel extends \Model
             ->prepare($sqlQuery)
             ->execute()
         ;
-        return $objResult->fetchAllAssoc();
+        return DataHelper::convertValue($objResult->fetchAllAssoc());
     }
 
     /**
@@ -108,7 +114,7 @@ class BasePortfolioModel extends \Model
             ->prepare($sqlQuery)
             ->execute()
         ;
-        return $objResult->fetchAllAssoc();
+        return DataHelper::convertValue($objResult->fetchAllAssoc());
     }
 
     /**
@@ -139,6 +145,19 @@ class BasePortfolioModel extends \Model
         self::save();
 
         return self::updateChildClosure($this->id);
+    }
+
+    /**
+     * overwrites the Model\save() function. Needed to update the closureLib
+     *
+     * @see Contao.Model::save()
+     */
+    public function updateClosureExternal($moduleName)
+    {
+        #-- save the closure
+        $tableName = 'tl_' . $moduleName . '_closures';
+
+        BaseClosuresModel::updateClosures($this->id, self::_getAllPids(), $tableName);
     }
 
     /**

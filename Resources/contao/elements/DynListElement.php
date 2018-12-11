@@ -11,6 +11,7 @@ namespace Home\LibrareeBundle\Resources\contao\elements;
 use Home\LibrareeBundle\Resources\contao\models\BasePinModel;
 use Home\LibrareeBundle\Resources\contao\models\BasePortfolioModel;
 use Home\PearlsBundle\Resources\contao\Helper as Helper;
+use Home\TaxonomeeBundle\Resources\contao\models\TaxonomeeModel;
 
 class DynListElement extends BaseListElement
 {
@@ -53,6 +54,8 @@ class DynListElement extends BaseListElement
             $alias = $_GET['auto_item'];
             $table = $this->lib_nav_table;
 
+            $this->Template->lib_nav_href = $this->lib_nav_href;
+
             #-- get portfolio from alias
             $portfolio = $this->getPortfolio($table, $alias);
 
@@ -60,8 +63,10 @@ class DynListElement extends BaseListElement
             if(is_array($portfolio) && count($portfolio) > 0){
                 $portfolio = $portfolio[0];
 
+                $this->Template->portfolio = $portfolio;
                 $this->Template->portfolios = $this->getPortfolios($table, $portfolio);
                 $this->Template->pins = $this->getPins($table, $portfolio);
+                $this->Template->taxonomie = $this->getTaxonomieFromTable($table);
 
             }else{
                 #-- if no portfolio with alias was fount check if there is a pin with alias
@@ -135,5 +140,38 @@ class DynListElement extends BaseListElement
             $table . '_pin.alias = "' . $alias . '"',
         );
         return BasePinModel::findByTable($table, $options);
+    }
+
+    public function getTaxonomieFromTable($table)
+    {
+        $return = array();
+        $searchAlias = strtolower(explode('_', $table)[1]);
+
+        $parent = TaxonomeeModel::findBy(array(
+            TaxonomeeModel::getTable() . '.alias LIKE "' . $searchAlias . '"'
+        ), null);
+
+        if($parent){
+            $parent = $parent->row();
+        }
+
+        if(is_array($parent) && count($parent) > 0){
+            #-- get all pins with keywords portfolio as parent
+            $options = TaxonomeeModel::findBy(array(
+                TaxonomeeModel::getTable() . ".pid = " . $parent['id']
+            ), null);
+
+            if($options){
+                $options = $options->fetchAll();
+            }
+
+            if(is_array($options) && count($options) > 0){
+                foreach ($options as $row){
+                    $return[$row['id']] = $row['name'];
+                }
+            }
+        }
+
+        return $return;
     }
 }

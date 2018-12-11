@@ -11,26 +11,27 @@ use Home\PearlsBundle\Resources\contao\Helper\Dca as Helper;
 
 $moduleName = 'tl_content';
 
-$tl_content = new Helper\DcaHelper($moduleName);
-
 try{
-$tl_content
-    #-- Libraree Navigation --------------------------------------------------------------------------------------------------------
-    ->addField('select', 'lib_nav_table', array(
-        'eval' => array(
-            'mandatory' => true,
-            'includeBlankOption' => true,
-        ),
-        'options_callback' => array('Home\LibrareeBundle\Resources\contao\dca\tl_module','getTableOptions'),
-        'load_callback'    => array(array('Home\LibrareeBundle\Resources\contao\dca\tl_module','setTable'))
-    ))
+    $tl_content = new Helper\DcaHelper($moduleName);
+    $tl_content
+        #-- Libraree Navigation --------------------------------------------------------------------------------------------------------
+        ->addField('select', 'lib_nav_table', array(
+            'eval' => array(
+                'mandatory' => true,
+                'includeBlankOption' => true,
+            ),
+            'options_callback' => array('Home\LibrareeBundle\Resources\contao\dca\tl_module','getTableOptions'),
+            'load_callback'    => array(array('Home\LibrareeBundle\Resources\contao\dca\tl_module','setTable'))
+        ))
+        ->addField('text', 'lib_nav_href')
 
-    #-- mod_nav_libraree
-    ->copyPalette('default', 'dyn_lib_list_cte')
-    ->addPaletteGroup('dyn_lib_list_cte', array(
-        'lib_nav_table'
-    ), 'dyn_lib_list_cte')
-;
+        #-- mod_nav_libraree
+        ->copyPalette('default', 'dyn_lib_list_cte')
+        ->addPaletteGroup('dyn_lib_list_cte', array(
+            'lib_nav_table',
+            'lib_nav_href'
+        ), 'dyn_lib_list_cte')
+    ;
 }catch(\Exception $e){
     var_dump($e);
 }

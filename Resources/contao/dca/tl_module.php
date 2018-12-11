@@ -11,49 +11,49 @@ use Home\PearlsBundle\Resources\contao\Helper\Dca as Helper;
 
 $moduleName = 'tl_module';
 
-$tl_content = new Helper\DcaHelper($moduleName);
-
 try{
-$tl_content
-    #-- Libraree Navigation --------------------------------------------------------------------------------------------------------
-    ->addField('integer','lib_nav_depth', array(
-        'sql' => "int(10) DEFAULT 0 NOT NULL",
-    ))
-    ->addField('checkbox','lib_nav_pins')
-    ->addField('select', 'lib_nav_table', array(
-        'eval' => array(
-            'mandatory' => true,
-            'includeBlankOption' => true,
-        ),
-        'options_callback' => array('Home\LibrareeBundle\Resources\contao\dca\tl_module','getTableOptions'),
-        'load_callback'    => array(array('Home\LibrareeBundle\Resources\contao\dca\tl_module','setTable'))
-    ))
-    ->addField('select', 'lib_nav_portfolio', array(
-        'eval' => array(
-            'includeBlankOption' => true,
-        ),
-        'options_callback' => array('Home\LibrareeBundle\Resources\contao\dca\tl_module','getPortfolioOptions'),
-    ))
-    ->addField('select_template', 'lib_nav_template_mod', array(
-        'tempPrefix' => 'mod_'
-    ))
-    ->addField('select_template', 'lib_nav_template_nav', array(
-        'tempPrefix' => 'nav_'
-    ))
-    ->addField('text', 'lib_nav_href')
+    $tl_content = new Helper\DcaHelper($moduleName);
+    $tl_content
+        #-- Libraree Navigation --------------------------------------------------------------------------------------------------------
+        ->addField('integer','lib_nav_depth', array(
+            'sql' => "int(10) DEFAULT 0 NOT NULL",
+        ))
+        ->addField('checkbox','lib_nav_pins')
+        ->addField('select', 'lib_nav_table', array(
+            'eval' => array(
+                'mandatory' => true,
+                'includeBlankOption' => true,
+                'submitOnChange' => true,
+            ),
+            'options_callback' => array('Home\LibrareeBundle\Resources\contao\dca\tl_module','getTableOptions'),
+            'load_callback'    => array(array('Home\LibrareeBundle\Resources\contao\dca\tl_module','setTable'))
+        ))
+        ->addField('select', 'lib_nav_portfolio', array(
+            'eval' => array(
+                'includeBlankOption' => true,
+            ),
+            'options_callback' => array('Home\LibrareeBundle\Resources\contao\dca\tl_module','getPortfolioOptions'),
+        ))
+        ->addField('select_template', 'lib_nav_template_mod', array(
+            'tempPrefix' => 'mod_'
+        ))
+        ->addField('select_template', 'lib_nav_template_nav', array(
+            'tempPrefix' => 'nav_'
+        ))
+        ->addField('text', 'lib_nav_href')
 
-    #-- mod_nav_libraree
-    ->copyPalette('default', 'mod_nav_libraree')
-    ->addPaletteGroup('mod_nav_libraree', array(
-        'lib_nav_table',
-        'lib_nav_portfolio',
-        'lib_nav_href',
-        'lib_nav_depth',
-        'lib_nav_pins',
-        'lib_nav_template_mod',
-        'lib_nav_template_nav'), 'mod_nav_libraree')
+        #-- mod_nav_libraree
+        ->copyPalette('default', 'mod_nav_libraree')
+        ->addPaletteGroup('mod_nav_libraree', array(
+            'lib_nav_table',
+            'lib_nav_portfolio',
+            'lib_nav_href',
+            'lib_nav_depth',
+            'lib_nav_pins',
+            'lib_nav_template_mod',
+            'lib_nav_template_nav'), 'mod_nav_libraree')
 
-;
+    ;
 }catch(\Exception $e){
     var_dump($e);
 }

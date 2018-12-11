@@ -8,7 +8,7 @@
 
 namespace Home\LibrareeBundle\Resources\contao\models;
 
-class BaseClosuresModel extends \Model
+class BaseClosuresModel extends \Contao\Model
 {
     /**
      * find children from library element till a specific depth

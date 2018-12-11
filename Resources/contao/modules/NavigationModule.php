@@ -172,6 +172,7 @@ class NavigationModule extends \Contao\Module
                         }
                     }
                     $op[$item['id']]['children'] = $children;
+                    $op[$item['id']]['class'] = 'submenu';
                     #-- generate sub-items template
                     $subItems = new \FrontendTemplate();
                     $subItems->setName($template);

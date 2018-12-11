@@ -13,8 +13,8 @@
     "require": {
         "php": "^5.6|^7.1",
         "contao/core-bundle": "^4.4.2",
-        "home/taxonomee-bundle": "dev-master",
-        "home/perls-bundle": "dev-master"
+        "home/taxonomee-bundle": "@dev",
+        "home/perls-bundle": "@dev"
     },
     "autoload": {
         "psr-4": {

@@ -90,7 +90,7 @@ class DynListElement extends BaseListElement
     {
         $options = array(
             $table . '_portfolio.published = 1',
-            $table . '_portfolio.pid = ' . $portfolio['pid'],
+            $table . '_portfolio.pid = ' . $portfolio['id'],
         );
         return BasePortfolioModel::findByTable($table, $options);
     }

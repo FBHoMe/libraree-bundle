@@ -121,7 +121,7 @@ class DynListElement extends BaseListElement
     {
         $options = array(
             $table . '_pin.published = 1',
-            $table . '_pin.pid = ' . $portfolio['pid'],
+            $table . '_pin.pid = ' . $portfolio['id'],
         );
         return BasePinModel::findByTable($table, $options);
     }

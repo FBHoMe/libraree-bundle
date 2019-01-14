@@ -119,7 +119,7 @@ class NavigationModule extends \Contao\Module
         }
 
         #-- build the tree from the portfolio elements
-        $tree = $this->buildTree($portfolios, $portfolio, $templateNav, $href, 1, $depth, $alias);
+        $tree = $this->buildTree($portfolios, $portfolio, $templateNav, $href, 1, $depth, $alias, $table);
 
         $level_1 = new \FrontendTemplate();
         $level_1->setName($templateNav);
@@ -144,8 +144,22 @@ class NavigationModule extends \Contao\Module
      * @param $alias
      * @return array
      */
-    private function buildTree( $arr, $pid = null, $template, $href, $level, $depth, $alias ) {
+    private function buildTree( $arr, $pid = null, $template, $href, $level, $depth, $alias, $table) {
         $op = array();
+        $trailIds = array();
+
+        if($alias){
+            $active = BasePortfolioModel::findByTable($table, array($table . '_portfolio.alias = "' . $alias . '"'));
+            if($active && is_array($active) && count($active) > 0){
+                $pids = BasePortfolioModel::findParents($active[0]['id'], $table . '_closures');
+                if(is_array($pids) && count($pids) > 0){
+                    foreach ($pids as $row){
+                        $trailIds[] = $row['ancestor_id'];
+                    }
+                }
+            }
+        }
+
         foreach( $arr as $item ) {
             if( $item['pid'] == $pid ) {
                 #-- break if level is higher then depth and depth is not '0'
@@ -153,15 +167,23 @@ class NavigationModule extends \Contao\Module
 
                 $op[$item['id']] = $item;
                 #-- set by nav template required values
-                $op[$item['id']]['link'] = $item['name'];
+                $op[$item['id']]['link'] = $item['title'];
                 $op[$item['id']]['href'] = $href . '/' . $item['alias'] . '.html';
                 if($item['alias'] == $alias){
                     $op[$item['id']]['isActive'] = true;
                 }
 
+                if(count($trailIds) > 0){
+                    foreach ($trailIds as $trailId){
+                        if($item['id'] == $trailId){
+                            $op[$item['id']]['class'] .= ' trail';
+                        }
+                    }
+                }
+
                 #-- recursive to get all child elements
                 $level++;
-                $children =  $this->buildTree( $arr, $item['id'], $template, $href, $level, $depth, $alias);
+                $children =  $this->buildTree( $arr, $item['id'], $template, $href, $level, $depth, $alias, $table);
                 if( $children || $op[$item['id']]['children']) {
                     #-- merge pins and child portfolios
                     if($op[$item['id']]['children']){

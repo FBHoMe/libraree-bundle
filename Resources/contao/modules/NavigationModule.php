@@ -175,7 +175,7 @@ class NavigationModule extends \Contao\Module
 
                 if(count($trailIds) > 0){
                     foreach ($trailIds as $trailId){
-                        if($item['id'] == $trailId){
+                        if($item['id'] == $trailId && $item['alias'] != $alias){
                             $op[$item['id']]['class'] .= ' trail';
                         }
                     }

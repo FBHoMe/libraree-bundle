@@ -59,22 +59,58 @@ class NavigationModule extends \Contao\Module
             \Input::setGet('item', \Input::get('auto_item'));
         }
 
-        $depth = $this->lib_nav_depth;
-        $withPins = $this->lib_nav_pins;
-        $portfolio = $this->lib_nav_portfolio;
-        $table = $this->lib_nav_table;
-        $templateMod = $this->lib_nav_template_mod ? $this->lib_nav_template_mod : $this->strTemplate;
-        $templateNav = $this->lib_nav_template_nav ? $this->lib_nav_template_nav : $this->strTemplateNav;
-        $href = $this->lib_nav_href;
-        $alias = $_GET['auto_item'];
+        $this->alias = $_GET['auto_item'];
 
-        if($portfolio){
+        #-- overwrite default templates
+        if ($this->lib_nav_template_mod) {
+            $this->strTemplate = $this->lib_nav_template_mod;
+        }
+
+        if ($this->lib_nav_template_nav) {
+            $this->strTemplateNav = $this->lib_nav_template_nav;
+        }
+
+        #-- get portfolio data
+        $portfolios = $this->getPortfolios();
+
+        #-- get Pins for Portfolios
+        if($this->lib_nav_pins){
+            $portfolios = $this->addPins($portfolios);
+        }
+
+        #-- set portfolio to 0 if not defined
+        if($this->lib_nav_portfolio === ''){
+            $this->lib_nav_portfolio = 0;
+        }
+
+        #-- build the tree from the portfolio elements
+        $tree = $this->buildTree($portfolios, $this->lib_nav_portfolio, 1);
+
+        #-- get pages
+        if ($this->pages) {
+            $tree = $this->addPages($tree);
+        }
+
+        #-- override Module Template
+        $this->Template = new \FrontendTemplate();
+        $this->Template->setName($this->strTemplate);
+        $this->Template->items = $this->parseTemplate($tree);
+    }
+
+    /**
+     * get the portfolio data
+     * @return array
+     */
+    private function getPortfolios() {
+        $portfolios = array();
+
+        if($this->lib_nav_portfolio){
             #-- get id of all children from portfolio
-            $children = BaseClosuresModel::findChildren($portfolio, $depth, $table . '_closures');
-            $portfolios = BasePortfolioModel::findPortfoliosIn($table, $children);
+            $children = BaseClosuresModel::findChildren($this->lib_nav_portfolio, $this->lib_nav_depth, $this->lib_nav_table . '_closures');
+            $portfolios = BasePortfolioModel::findPortfoliosIn($this->lib_nav_table, $children);
         }else{
             #-- get all portfolio in table
-            $portfolios = BasePortfolioModel::findAllPortfolios($table . '_portfolio');
+            $portfolios = BasePortfolioModel::findAllPortfolios($this->lib_nav_table . '_portfolio');
         }
 
         #-- get the alias as link from the parent portfolio and remove unpublished portfolios
@@ -82,28 +118,37 @@ class NavigationModule extends \Contao\Module
             if($item['published'] != 1 && !BE_USER_LOGGED_IN){
                 unset($portfolios[$key]);
             }else{
-                if($item['id'] == $portfolio && !$href){
-                    $href = $item['alias'];
+                if($item['id'] == $this->lib_nav_portfolio && !$this->lib_nav_href){
+                    $this->lib_nav_href = $item['alias'];
                     //break;
                 }
             }
         }
 
-        #-- get Pins for Portfolios
-        if($withPins){
-            foreach($portfolios as $key => $item){
+        return $portfolios;
+    }
+
+    /**
+     * add pins to the portfolio nav elements
+     * @param $portfolios
+     * @return array
+     */
+    private function addPins($portfolios) {
+        if ($portfolios && is_array($portfolios) && count($portfolios) > 0) {
+            foreach ($portfolios as $key => $item) {
                 $options = array(
-                    $table . '_pin.published = 1',
-                    $table . '_pin.pid = '.$item['id'],
+                    $this->lib_nav_table . '_pin.published = 1',
+                    $this->lib_nav_table . '_pin.pid = ' . $item['id'],
                 );
 
-                $pins = BasePinModel::findByTable($table, $options);
+                $pins = BasePinModel::findByTable($this->lib_nav_table, $options);
+
                 #-- set by nav template required values
-                if(is_array($pins) && count($pins) > 0){
-                    foreach ($pins as $k => $pin){
+                if (is_array($pins) && count($pins) > 0) {
+                    foreach ($pins as $k => $pin) {
                         $pins[$k]['link'] = $pin['name'];
-                        $pins[$k]['href'] = $href . '/' . $pin['alias'] . '.html';
-                        if($pin['alias'] == $alias){
+                        $pins[$k]['href'] = $this->lib_nav_href . '/' . $pin['alias'] . '.html';
+                        if ($pin['alias'] == $this->alias) {
                             $pins[$k]['isActive'] = true;
                         }
                     }
@@ -113,45 +158,79 @@ class NavigationModule extends \Contao\Module
             }
         }
 
-        #-- set portfolio to 0 if not defined
-        if($portfolio === ''){
-            $portfolio = 0;
+        return $portfolios;
+    }
+
+    private function addPages($portfolios) {
+        if ($this->pages) {
+            $objPages = \PageModel::findPublishedRegularWithoutGuestsByIds(deserialize($this->pages));
+
+            #-- der folgende Code stammt von Contao/ModuleCustomnav
+            if ($objPages)
+            {
+                $arrPages = array();
+
+                // Sort the array keys according to the given order
+                if ($this->orderPages != '')
+                {
+                    $tmp = \StringUtil::deserialize($this->orderPages);
+
+                    if (!empty($tmp) && \is_array($tmp))
+                    {
+                        $arrPages = array_map(function () {}, array_flip($tmp));
+                    }
+                }
+
+                // Add the items to the pre-sorted array
+                while ($objPages->next())
+                {
+                    $arrPages[$objPages->id] = $objPages->current();
+                }
+
+                $arrPages = array_values(array_filter($arrPages));
+
+                #-- jetzt müssen die Daten noch an das $portfolio Array angepasst werden und hinzugefügt werden
+                foreach ($arrPages as $key=>$value) {
+                    $portfolios[] = array(
+                        'id'    => $value->id,
+                        'title' => $value->title,
+                        'link' => $value->title,
+                        'href'  => $value->alias . '.html'
+                    );
+                }
+            }
         }
+        return $portfolios;
+    }
 
-        #-- build the tree from the portfolio elements
-        $tree = $this->buildTree($portfolios, $portfolio, $templateNav, $href, 1, $depth, $alias, $table);
-
-        $level_1 = new \FrontendTemplate();
-        $level_1->setName($templateNav);
-        $level_1->items = $tree;
-        $level_1->level = 'level_' . 1;
-
-        #-- override Module Template
-        $this->Template = new \FrontendTemplate();
-        $this->Template->setName($templateMod);
-
-        $this->Template->items = $level_1->parse();
+    /**
+     * returns a parsed nav template part
+     * @param $item - the items to parse
+     * @param $level - the actual nav leven
+     */
+    private function parseTemplate($items, $level = 1) {
+        $template = new \FrontendTemplate();
+        $template->setName($this->strTemplateNav);
+        $template->items = $items;
+        $template->level = 'level_' . $level;
+        return $template->parse();
     }
 
     /**
      * builds a multidimensional array tree structure from a flat array by id and pid
      * @param $arr
      * @param null $pid
-     * @param $template
-     * @param $href
      * @param $level
-     * @param $depth
-     * @param $alias
      * @return array
      */
-    private function buildTree( $arr, $pid = null, $template, $href, $level, $depth, $alias, $table) {
+    private function buildTree( $arr, $pid = null, $level) {
         $op = array();
         $trailIds = array();
 
-        if($alias){
-            $active = BasePortfolioModel::findByTable($table, array($table . '_portfolio.alias = "' . $alias . '"'));
+        if($this->alias){
+            $active = BasePortfolioModel::findByTable($this->lib_nav_table, array($this->lib_nav_table . '_portfolio.alias = "' . $this->alias . '"'));
             if($active && is_array($active) && count($active) > 0){
-                $pids = BasePortfolioModel::findParents($active[0]['id'], $table . '_closures');
+                $pids = BasePortfolioModel::findParents($active[0]['id'], $this->lib_nav_table . '_closures');
                 if(is_array($pids) && count($pids) > 0){
                     foreach ($pids as $row){
                         $trailIds[] = $row['ancestor_id'];
@@ -163,19 +242,19 @@ class NavigationModule extends \Contao\Module
         foreach( $arr as $item ) {
             if( $item['pid'] == $pid ) {
                 #-- break if level is higher then depth and depth is not '0'
-                if($level > $depth && $depth !== '0') break;
+                if($level > $this->lib_nav_depth && $this->lib_nav_depth !== '0') break;
 
                 $op[$item['id']] = $item;
                 #-- set by nav template required values
                 $op[$item['id']]['link'] = $item['title'];
-                $op[$item['id']]['href'] = $href . '/' . $item['alias'] . '.html';
-                if($item['alias'] == $alias){
+                $op[$item['id']]['href'] = $this->lib_nav_href . '/' . $item['alias'] . '.html';
+                if($item['alias'] == $this->alias){
                     $op[$item['id']]['isActive'] = true;
                 }
 
                 if(count($trailIds) > 0){
                     foreach ($trailIds as $trailId){
-                        if($item['id'] == $trailId && $item['alias'] != $alias){
+                        if($item['id'] == $trailId && $item['alias'] != $this->alias){
                             $op[$item['id']]['class'] .= ' trail';
                         }
                     }
@@ -183,7 +262,7 @@ class NavigationModule extends \Contao\Module
 
                 #-- recursive to get all child elements
                 $level++;
-                $children =  $this->buildTree( $arr, $item['id'], $template, $href, $level, $depth, $alias, $table);
+                $children =  $this->buildTree( $arr, $item['id'], $level);
                 if( $children || $op[$item['id']]['children']) {
                     #-- merge pins and child portfolios
                     if($op[$item['id']]['children']){
@@ -194,14 +273,9 @@ class NavigationModule extends \Contao\Module
                         }
                     }
                     $op[$item['id']]['children'] = $children;
-                    $op[$item['id']]['class'] = 'submenu';
+                    $op[$item['id']]['class'] .= ' submenu';
                     #-- generate sub-items template
-                    $subItems = new \FrontendTemplate();
-                    $subItems->setName($template);
-                    $subItems->items = $children;
-                    $subItems->level = 'level_' . $level;
-                    $op[$item['id']]['subitems'] = $subItems->parse();
-
+                    $op[$item['id']]['subitems'] = $this->parseTemplate($children, $level);
                 }
                 $level--;
             }

@@ -47,6 +47,7 @@ try{
         ->addPaletteGroup('mod_nav_libraree', array(
             'lib_nav_table',
             'lib_nav_portfolio',
+            'pages',
             'lib_nav_href',
             'lib_nav_depth',
             'lib_nav_pins',

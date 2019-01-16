@@ -66,7 +66,7 @@ class DynListElement extends BaseListElement
                 $this->Template->portfolio = $portfolio;
                 $this->Template->portfolios = $this->getPortfolios($table, $portfolio);
                 $this->Template->pins = $this->getPins($table, $portfolio);
-                $this->Template->taxonomie = $this->getTaxonomieFromTable($table);
+                $this->Template->taxonomies = $this->getTaxonomieFromTable($table);
 
             }else{
                 #-- if no portfolio with alias was fount check if there is a pin with alias
@@ -167,7 +167,7 @@ class DynListElement extends BaseListElement
 
             if(is_array($options) && count($options) > 0){
                 foreach ($options as $row){
-                    $return[$row['id']] = $row['name'];
+                    $return[$row['id']] = $row;
                 }
             }
         }

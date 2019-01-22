@@ -9,6 +9,7 @@
 namespace Home\LibrareeBundle\Resources\contao\elements;
 
 use Home\LibrareeBundle\Resources\contao\models\BasePinModel;
+use Home\CustomizeeBundle\Resources\contao\dca\BasePinDca;
 use Home\LibrareeBundle\Resources\contao\models\BasePortfolioModel;
 use Home\PearlsBundle\Resources\contao\Helper as Helper;
 use Home\TaxonomeeBundle\Resources\contao\models\TaxonomeeModel;
@@ -66,7 +67,7 @@ class DynListElement extends BaseListElement
                 $this->Template->portfolio = $portfolio;
                 $this->Template->portfolios = $this->getPortfolios($table, $portfolio);
                 $this->Template->pins = $this->getPins($table, $portfolio);
-                $this->Template->taxonomies = $this->getTaxonomieFromTable($table);
+                $this->Template->taxonomies = BasePinDca::getTaxonomieFromTable($this->lib_nav_table);
 
             }else{
                 #-- if no portfolio with alias was fount check if there is a pin with alias
@@ -167,7 +168,7 @@ class DynListElement extends BaseListElement
 
             if(is_array($options) && count($options) > 0){
                 foreach ($options as $row){
-                    $return[$row['id']] = $row;
+                    $return[$row['id']] = $row['name'];
                 }
             }
         }

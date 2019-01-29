@@ -19,15 +19,15 @@ class BasePortfolioModel extends \Contao\Model
      * @param $options
      * @return array|null
      */
-    public static function findByTable($strTable, $options)
+    public static function findByTable($strTable, $strColumn, $varValue=null, $options=array())
     {
         $return = array();
         if(strpos($strTable, '_portfolio') === false){
             $strTable = $strTable. '_portfolio';
         }
         $strClass = \Contao\Model::getClassFromTable($strTable);
-        $strModel = $strClass::findBy($options, null);
-
+        $strModel = $strClass::findBy($strColumn, $varValue, $options);
+        
         if($strModel instanceof \Contao\Model\Collection){
             $return = DataHelper::convertValue($strModel->fetchAll());
         }

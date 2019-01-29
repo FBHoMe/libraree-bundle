@@ -19,14 +19,14 @@ class BasePinModel extends \Contao\Model
      * @param $options
      * @return array|null
      */
-    public static function findByTable($strTable, $options)
+    public static function findByTable($strTable, $strColumn, $varValue=null, $options=array())
     {
         $return = array();
         if(strpos($strTable, '_pin') === false){
             $strTable = $strTable. '_pin';
         }
         $strClass = \Contao\Model::getClassFromTable($strTable);
-        $strModel = $strClass::findBy($options, null);
+        $strModel = $strClass::findBy($strColumn, $varValue, $options);
 
         if($strModel instanceof \Contao\Model\Collection){
             $return = DataHelper::convertValue($strModel->fetchAll());

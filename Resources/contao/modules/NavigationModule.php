@@ -228,7 +228,7 @@ class NavigationModule extends \Contao\Module
         $trailIds = array();
 
         if($this->alias){
-            $active = BasePortfolioModel::findByTable($this->lib_nav_table, array($this->lib_nav_table . '_portfolio.alias = "' . $this->alias . '"'));
+            $active = BasePortfolioModel::findByTable($this->lib_nav_table, [$this->lib_nav_table . '_portfolio.alias = ?'], $this->alias);
             if($active && is_array($active) && count($active) > 0){
                 $pids = BasePortfolioModel::findParents($active[0]['id'], $this->lib_nav_table . '_closures');
                 if(is_array($pids) && count($pids) > 0){

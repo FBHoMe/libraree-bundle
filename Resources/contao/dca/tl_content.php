@@ -7,6 +7,9 @@
  */
 
 namespace Home\LibrareeBundle\Resources\contao\dca;
+use Contao\ContentModel;
+use Contao\DataContainer;
+use Home\LibrareeBundle\Resources\contao\models\BasePinModel;
 use Home\PearlsBundle\Resources\contao\Helper\Dca as Helper;
 
 $moduleName = 'tl_content';
@@ -25,12 +28,38 @@ try{
         ))
         ->addField('text', 'lib_nav_href')
 
-        #-- mod_nav_libraree
+        #-- select pin
+        ->addField('select', 'lib_table', array(
+            'eval' => array(
+                'mandatory' => true,
+                'includeBlankOption' => true,
+                'submitOnChange' => true,
+            ),
+            'options_callback' => array('Home\LibrareeBundle\Resources\contao\dca\tl_module','getTableOptions'),
+            'load_callback'    => array(array('Home\LibrareeBundle\Resources\contao\dca\tl_module','setTable'))
+        ))
+        ->addField('select', 'lib_pin', array(
+            'options_callback' => array('Home\LibrareeBundle\Resources\contao\dca\tl_content','getPinSelectOptions'),
+        ))
+
+        ->addField('select_template', 'hm_template', array(
+            'tempPrefix' => 'ce_'
+        ))
+
+        #-- dyn lib list
         ->copyPalette('default', 'dyn_lib_list_cte')
         ->addPaletteGroup('dyn_lib_list_cte', array(
             'lib_nav_table',
             'lib_nav_href'
         ), 'dyn_lib_list_cte')
+
+        #-- select pin
+        ->copyPalette('default', 'select_pin')
+        ->addPaletteGroup('select_pin', array(
+            'lib_nav_table',
+            'lib_pin',
+            'hm_template'
+        ), 'select_pin')
     ;
 }catch(\Exception $e){
     var_dump($e);
@@ -38,6 +67,27 @@ try{
 
 class tl_content extends \Backend
 {
+    public function getPinSelectOptions(DataContainer $dc)
+    {
+        $return = array();
+        $contentModel = ContentModel::findById($dc->id);
+
+        if($contentModel && false){
+            $contentRow = $contentModel->row();
+            if($contentRow && is_array($contentRow) && array_key_exists('lib_table', $contentRow) && $contentRow['lib_table']){
+                $pinModel = BasePinModel::findAllByTable($contentRow['lib_table']);
+
+                if($pinModel && is_array($pinModel) && count($pinModel) > 0){
+                    foreach ($pinModel as $pin){
+                        $return[$pin['id']] = $pin['title'];
+                    }
+                }
+            }
+        }
+
+        return $return;
+    }
+
     public function setFilter($varValue)
     {
         $GLOBALS['CTE_FILTER'] = $varValue;

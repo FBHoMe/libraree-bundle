@@ -28,6 +28,9 @@ array_insert($GLOBALS['BE_MOD']['content'], 3 ,[
 #-- add content elements -----------------------------------------------------------------------------------------------
 array_insert($GLOBALS['TL_CTE'], 2, array
 (
+    'libraree' => array(
+        'select_pin' => 'Home\LibrareeBundle\Resources\contao\elements\SelectPinElement',
+    )
    /* 'recipee' => array
     (
         'recipee_list_cte'     => 'Home\LibrareeBundle\Resources\contao\elements\RecipeeListElement',

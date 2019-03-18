@@ -34,4 +34,27 @@ class BasePinModel extends \Contao\Model
 
         return $return;
     }
+
+    /**
+     * @param $strTable
+     * @param array $options
+     * @return array
+     */
+    public static function findAllByTable($strTable, $options=array())
+    {
+        $return = array();
+
+        if(strpos($strTable, '_pin') === false){
+            $strTable = $strTable. '_pin';
+        }
+
+        $strClass = \Contao\Model::getClassFromTable($strTable);
+        $strModel = $strClass::findAll($options);
+
+        if($strModel instanceof \Contao\Model\Collection){
+            $return = DataHelper::convertValue($strModel->fetchAll());
+        }
+
+        return $return;
+    }
 }

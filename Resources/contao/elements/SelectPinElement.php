@@ -47,6 +47,13 @@ class SelectPinElement extends \Contao\ContentElement
         $this->Template             = new \BackendTemplate($this->strTemplate);
         $this->Template->title      = $this->headline;
         $this->Template->wildcard   = "### Pin Auswahl ###";
+        if($this->lib_table && $this->lib_pin){
+            $pin = $this->getRelatedPin($this->lib_table, $this->lib_pin);
+
+            $this->Template->wildcard   = "### Pin Auswahl ###<br>" .
+                "Tabelle: " . $this->lib_table . " | " .
+                "Pin: " . $pin[0]['name'] . " (ID: " . $this->lib_pin . ")";
+        }
     }
 
     /**
@@ -61,8 +68,13 @@ class SelectPinElement extends \Contao\ContentElement
 
         #-- get pin
         if($this->lib_table && $this->lib_pin){
-            $pin = BasePinModel::findByTable($this->lib_nav_table, 'id', $this->lib_pin);
+            $pin = $this->getRelatedPin($this->lib_table, $this->lib_pin);
             $this->Template->pin = $pin;
         }
+    }
+
+    private function getRelatedPin($table, $id)
+    {
+        return BasePinModel::findByTable($table, [$table . '_pin.id = ' . $id]);
     }
 }

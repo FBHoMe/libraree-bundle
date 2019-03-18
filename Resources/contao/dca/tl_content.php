@@ -39,7 +39,12 @@ try{
             'load_callback'    => array(array('Home\LibrareeBundle\Resources\contao\dca\tl_module','setTable'))
         ))
         ->addField('select', 'lib_pin', array(
+            'eval' => array(
+                'chosen' => true,
+                'includeBlankOption' => true,
+            ),
             'options_callback' => array('Home\LibrareeBundle\Resources\contao\dca\tl_content','getPinSelectOptions'),
+            'selectOption' => array('name','title'),
         ))
 
         ->addField('select_template', 'hm_template', array(
@@ -70,17 +75,29 @@ class tl_content extends \Backend
     public function getPinSelectOptions(DataContainer $dc)
     {
         $return = array();
+        $option = $GLOBALS['TL_DCA'][$dc->table]['fields'][$dc->field]['selectOption'];
         $contentModel = ContentModel::findById($dc->id);
 
-        if($contentModel && false){
+        if($contentModel){
             $contentRow = $contentModel->row();
             if($contentRow && is_array($contentRow) && array_key_exists('lib_table', $contentRow) && $contentRow['lib_table']){
                 $pinModel = BasePinModel::findAllByTable($contentRow['lib_table']);
 
                 if($pinModel && is_array($pinModel) && count($pinModel) > 0){
                     foreach ($pinModel as $pin){
-                        $return[$pin['id']] = $pin['title'];
+                        if(is_array($option) && count($option) > 0){
+                            foreach ($option as $key => $item){
+                                if($key === 0){
+                                    $return[$pin['id']] = $pin[$item];
+                                }else{
+                                    $return[$pin['id']] .= ', ' . $pin[$item];
+                                }
+                            }
+                        }else{
+                            $return[$pin['id']] = $pin[$option];
+                        }
                     }
+                    asort($return);
                 }
             }
         }
@@ -100,7 +117,7 @@ class tl_content extends \Backend
         $filter = str_replace('cteFilter_','', $id);
 
         $options = array(0 => '-');
-        
+
         if(array_key_exists($filter, $GLOBALS['TL_CTE_FILTER']) && (array_key_exists('filter', $GLOBALS['TL_CTE_FILTER'][$filter]))){
             $pids = array_keys($GLOBALS['TL_CTE_FILTER'][$filter]['filter']);
 

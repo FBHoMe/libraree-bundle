@@ -56,7 +56,7 @@ try{
         #-- select pin
         ->copyPalette('default', 'select_pin')
         ->addPaletteGroup('select_pin', array(
-            'lib_nav_table',
+            'lib_table',
             'lib_pin',
             'hm_template'
         ), 'select_pin')

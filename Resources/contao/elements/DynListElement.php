@@ -9,7 +9,7 @@
 namespace Home\LibrareeBundle\Resources\contao\elements;
 
 use Home\LibrareeBundle\Resources\contao\models\BasePinModel;
-use Home\CustomizeeBundle\Resources\contao\dca\BasePinDca;
+use Home\LibrareeBundle\Resources\contao\BasePinDca;
 use Home\LibrareeBundle\Resources\contao\models\BasePortfolioModel;
 use Home\PearlsBundle\Resources\contao\Helper as Helper;
 use Home\TaxonomeeBundle\Resources\contao\models\TaxonomeeModel;

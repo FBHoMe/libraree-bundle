@@ -27,6 +27,17 @@ class DynListElement extends BaseListElement
      */
     public function generate()
     {
+        // #-- get file path from url
+        $file = \Contao\Input::get('file', true);
+        // #-- get file object from path
+        $objFile = \FilesModel::findByPath($file);
+
+        // Send the file to the browser and do not send a 404 header (see #4632)
+        if ($file != '' && $file == $objFile->path)
+        {
+            \Contao\Controller::sendFileToBrowser($file);
+        }
+
         return parent::generate();
     }
 

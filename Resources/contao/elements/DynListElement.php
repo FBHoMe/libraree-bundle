@@ -20,7 +20,6 @@ class DynListElement extends BaseListElement
      * @var string
      */
     protected $strTemplate = 'cte_list';
-    protected $order = 'id DESC';
 
     /**
      * @return string
@@ -59,6 +58,15 @@ class DynListElement extends BaseListElement
      */
     private function generateFrontend()
     {
+        #-- check if pin/portfolio order is set
+        if($GLOBALS['libraree']['pinOrder'] === null){
+            $GLOBALS['libraree']['pinOrder'] = 'id DESC';
+        }
+        if($GLOBALS['libraree']['portfolioOrder'] === null){
+            $GLOBALS['libraree']['portfolioOrder'] = 'id DESC';
+        }
+
+        #-- get auto item
         if (!isset($_GET['item']) && \Config::get('useAutoItem') && isset($_GET['auto_item'])) {
             \Contao\Input::setGet('item', \Contao\Input::get('auto_item'));
         }
@@ -101,7 +109,13 @@ class DynListElement extends BaseListElement
      */
     private function getPortfolios($table, $portfolio)
     {
-        return BasePortfolioModel::findByTable($table, [$table . '_portfolio.published = 1', $table . '_portfolio.pid = ?'], $portfolio['id'], array('order'=>$this->order));
+        $strColumn = array(
+            $table . '_portfolio.published = 1',
+            $table . '_portfolio.pid = ?'
+        );
+        $options = array('order'=>$GLOBALS['libraree']['portfolioOrder']);
+
+        return BasePortfolioModel::findByTable($table, $strColumn, $portfolio['id'], $options);
     }
 
     /**
@@ -112,7 +126,13 @@ class DynListElement extends BaseListElement
      */
     private function getPortfolio($table, $alias)
     {
-        return BasePortfolioModel::findByTable($table, [$table . '_portfolio.published = 1', $table . '_portfolio.alias = ?'], $alias, array('order'=>$this->order));
+        $strColumn = array(
+            $table . '_portfolio.published = 1',
+            $table . '_portfolio.alias = ?'
+        );
+        $options = array('order'=>$GLOBALS['libraree']['portfolioOrder']);
+
+        return BasePortfolioModel::findByTable($table, $strColumn, $alias, $options);
     }
 
     /**
@@ -124,7 +144,13 @@ class DynListElement extends BaseListElement
      */
     private function getPins($table, $portfolio)
     {
-        return BasePinModel::findByTable($table, [$table . '_pin.published = 1', $table . '_pin.pid = ?'], $portfolio['id'], array('order'=>$this->order));
+        $strColumn = array(
+            $table . '_pin.published = 1',
+            $table . '_pin.pid = ?'
+        );
+        $options = array('order'=>$GLOBALS['libraree']['pinOrder']);
+
+        return BasePinModel::findByTable($table, $strColumn, $portfolio['id'], $options);
     }
 
     /**

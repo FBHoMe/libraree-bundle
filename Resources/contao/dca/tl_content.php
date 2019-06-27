@@ -51,6 +51,9 @@ try{
             'tempPrefix' => 'ce_'
         ))
 
+        #-- taxonomy id
+        ->addField('text', 'lib_tax_id')
+
         #-- dyn lib list
         ->copyPalette('default', 'dyn_lib_list_cte')
         ->addPaletteGroup('dyn_lib_list_cte', array(
@@ -65,6 +68,14 @@ try{
             'lib_pin',
             'hm_template'
         ), 'select_pin')
+
+        #-- proximity_map
+        ->copyPalette('default', 'proximity_map')
+        ->addPaletteGroup('proximity_map', array(
+            'lib_table',
+            'lib_tax_id',
+            'hm_template',
+        ), 'proximity_map')
     ;
 }catch(\Exception $e){
     var_dump($e);

@@ -1,0 +1,129 @@
+<div id="map" class="map">
+    <div id="popup"></div>
+</div>
+
+
+<script>
+    // #-- get pins from php
+    let pins = <?=json_encode($this->pins)?>;
+
+    if(pins && Array.isArray(pins)){
+        let features = [];
+        // #-- loop over all pins
+        pins.forEach(pin => {
+            // #-- check that pin has geocoords
+            if(pin['geocoords']){
+
+                let coords = pin['geocoords'].split(',');
+                // #-- check that coords are not empty
+                if(coords[0] !== ''){
+                    // #-- build address
+                    let address = pin['street'] + '<br>' + pin['zip'] + ' ' + pin['city'];
+                    if(pin['phone']) address += '<br><br>' + pin['phone'];
+                    if(pin['email']) address += '<br><br><a href="mailto:' + pin['email'] + '" >' + pin['email'] + '</a>';
+                    if(pin['www']) address += '<br><a href="' + pin['www'] + '" target="_blank">' + pin['www'] + '</a>';
+
+                    // #-- create feature/pin markers
+                    let iconFeature = new ol.Feature({
+                        type: 'icon',
+                        geometry: new ol.geom.Point(ol.proj.fromLonLat([parseFloat(coords[1]),parseFloat(coords[0])])),
+                        name: pin['name'],
+                        address: address,
+                    });
+
+                    // #-- add style to feature/pin marker
+                    let iconStyle = new ol.style.Style({
+                        image: new ol.style.Icon(({
+                            //anchor: [0, 0],
+                            src: 'files/theme/images/deleteMe/pin.png'
+                        }))
+                    });
+                    iconFeature.setStyle(iconStyle);
+                    // #-- add feature/pin marker to array
+                    features.push(
+                        iconFeature
+                    );
+                }
+
+            }
+        });
+
+        // #-- create feature/pin marker layer
+        let vectorSource = new ol.source.Vector({
+            features: features
+        });
+        let vectorLayer = new ol.layer.Vector({
+            source: vectorSource
+        });
+
+        // #-- create map
+        const map = new ol.Map({
+            target: 'map',
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM()
+                }),
+                vectorLayer
+            ],
+            view: new ol.View({
+                center: ol.proj.fromLonLat([<?=$this->center['lon']?>, <?=$this->center['lat']?>]),
+                zoom: <?=$this->center['zoom']?>
+            })
+        });
+
+        // #-- get popup element
+        const element = document.getElementById('popup');
+
+        // #-- create popup overlay
+        const popup = new ol.Overlay({
+            element: element,
+            positioning: 'bottom-center',
+            stopEvent: false,
+            offset: [0, 0]
+        });
+        map.addOverlay(popup);
+
+        // #-- display popup on click
+        map.on('click', function(evt) {
+            // #-- check if a feature/pin marker was clicked
+            const feature = map.forEachFeatureAtPixel(evt.pixel,
+                function(feature) {
+                    return feature;
+                });
+            if (feature) {
+                let coordinates = feature.getGeometry().getCoordinates();
+                popup.setPosition(coordinates);
+
+                // #-- dispose old popover
+                $(element).popover('dispose');
+
+                // #-- init new popover
+                $(element).popover({
+                    placement: 'top',
+                    html: true,
+                    title: feature.get('name'),
+                    content: feature.get('address'),
+                });
+                $(element).popover('show');
+
+            } else {
+                // #-- dispose old popover
+                $(element).popover('dispose');
+            }
+        });
+
+        // #-- change mouse cursor when over feature/pin marker
+        map.on('pointermove', function(e) {
+            // #-- remove popover when map is dragged
+            if (e.dragging) {
+                $(element).popover('dispose');
+                return;
+            }
+            let pixel = map.getEventPixel(e.originalEvent);
+            let hit = map.hasFeatureAtPixel(pixel);
+
+            $('#' + map.getTarget()).css('cursor', hit ? 'pointer' : 'default');
+        });
+    }
+</script>
+

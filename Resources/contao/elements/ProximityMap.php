@@ -4,6 +4,7 @@ namespace Home\LibrareeBundle\Resources\contao\elements;
 
 use Home\LibrareeBundle\Resources\contao\models\BasePinModel;
 use Home\PearlsBundle\Resources\contao\Helper\GeoCoords;
+use Home\TaxonomeeBundle\Resources\contao\models\TaxonomeeModel;
 
 class ProximityMap extends BaseListElement
 {
@@ -34,6 +35,10 @@ class ProximityMap extends BaseListElement
             #-- bootstrap
             $GLOBALS['TL_CSS'][] = 'bundles/homelibraree/bootstrap_V4.3.1/css/bootstrap.min.css|static';
             $GLOBALS['TL_JAVASCRIPT'][] = 'bundles/homelibraree/bootstrap_V4.3.1/js/bootstrap.bundle.min.js';
+            #-- isotope
+            $GLOBALS['TL_JAVASCRIPT'][] = 'bundles/homelibraree/isotope_V3.0.6/isotope.pkgd.min.js';
+            $GLOBALS['TL_JAVASCRIPT'][] = 'bundles/homelibraree/isotope_V3.0.6/packery-mode.pkgd.min.js';
+            $GLOBALS['TL_JAVASCRIPT'][] = 'bundles/homelibraree/imagesLoaded_V4.1.4/imagesloaded.pkgd.min.js';
 
             $this->generateFrontend();
         }
@@ -72,7 +77,7 @@ class ProximityMap extends BaseListElement
             $pins = $this->getPins($table);
             $this->Template->pins = $pins;
             $this->Template->center = GeoCoords::autoCenterMap($pins);
-            #$this->Template->categories =
+            $this->Template->categories = $this->getCategoriesFromTaxonomy($this->lib_tax_id);
         }
     }
 
@@ -90,5 +95,25 @@ class ProximityMap extends BaseListElement
         $options = array('order'=>$GLOBALS['libraree']['pinOrder']);
 
         return BasePinModel::findByTable($table, $strColumn, null, $options);
+    }
+
+    private function getCategoriesFromTaxonomy($pId)
+    {
+        $return = array();
+
+        $model = TaxonomeeModel::findBy(array(
+            TaxonomeeModel::getTable() . '.pid = ' . $pId
+        ), null);
+
+        if($model instanceof \Contao\Model\Collection){
+            $result = $model->fetchAll();
+            foreach ($result as $row){
+                $return[$row['id']] = $row;
+            }
+        }
+
+        uasort($return, function($a,$b){return strcmp($a['name'], $b['name']);});
+
+        return $return;
     }
 }

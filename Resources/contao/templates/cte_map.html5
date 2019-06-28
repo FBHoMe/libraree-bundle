@@ -1,129 +1,326 @@
+<?php
+$taxonomies = $this->categories;
+?>
+<button class="show-map-btn" onclick="showMap()">Open Street Map anzeigen</button>
 <div id="map" class="map">
     <div id="popup"></div>
+</div>
+
+<div>
+    <h2>Mitgliederliste</h2>
+
+    <div class="member-filter hm-isotope-filter">
+        <div class="member-filter-checkbox">
+            <ul>
+                <li><button title="Alle Events" class="member-filter-btn alle active" onclick="filterIsotope('*', this)">Alle</button></li>
+                <?php
+                foreach($taxonomies as $taxonomy){
+                    if($taxonomy['name'] && $taxonomy['name'] !== '') {
+                        ?>
+                        <li><button title="<?= $taxonomy['name']; ?>" class="member-filter-btn <?= $taxonomy['id']; ?>" onclick="filterIsotope(<?= $taxonomy['id']; ?>, this)"><?= $taxonomy['name']; ?></button></li>
+                        <?php
+                    }
+                }
+                ?>
+            </ul>
+        </div>
+        <div class="member-filter-select">
+            <form class="hm-form-inline">
+                <select onchange="filterIsotopeBySelect(this.value)" class="hm-no-step">
+                    <option value="*">Alle Branchen</option>
+                    <?php
+                    foreach($taxonomies as $taxonomy){
+                        if($taxonomy['name'] && $taxonomy['name'] !== '') {
+                            ?>
+                            <option value="<?= $taxonomy['id']; ?>"><?= $taxonomy['name']; ?></option>
+                            <?php
+                        }
+                    }
+                    ?>
+                </select>
+            </form>
+        </div>
+    </div>
+
+
+    <div id="memberList" class="member-list">
+        <div class="member-list-sizer"></div>
+        <div class="member-list-gutter-sizer"></div>
+        <?php foreach($this->pins as $member) : if($member['title']) : ?>
+            <div class="member-list-item <?= $member['alias'] . ' ' . $member['businesstype']; ?>">
+                <div class="member-list-item-content layout-padding">
+                    <div>
+                        <div class="layout-row">
+                            <div class="flex-90">
+                                <?php if ($member['picture'] && is_array($member['picture'])): ?>
+                                    <div class="member-logo layout-padding hm-l-step-bottom">
+                                        <img src="<?= $member['picture']['path']; ?>">
+                                    </div>
+                                <?php endif; ?>
+                                <div class="businesstype meta-txt italic"><?= $taxonomies[$member['businesstype']]['name']; ?></div>
+                                <h4><?= $member['title']; ?></h4>
+                            </div>
+                            <div class="flex-10">
+                                <div class="expand-btn btn-icon"></div>
+                            </div>
+                        </div>
+
+                        <div class="member-details meta-txt">
+                            <span class="kurzbeschreibung strong"><?= $member['kurzbeschreibung']; ?></span><br>
+                            <span class="street"><?= $member['street']; ?></span><br>
+                            <span class="address"><?= $member['zip']; ?> <?= $member['city']; ?></span><br>
+                            <span class="phone"><?= $member['phone']; ?></span>
+                            <?php if ($member['email']) : ?><div class="email"><a href="mailto:'<?= $member['email']; ?>" >E-mail</a></div><?php endif; ?>
+                            <?php if ($member['www']) : ?><div class="www"><a href="http://<?= $member['www']; ?>" target="_blank" >Webseite</a></div><?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endif; endforeach; ?>
+    </div>
 </div>
 
 
 <script>
     // #-- get pins from php
     let pins = <?=json_encode($this->pins)?>;
+    let globalMap = undefined;
 
     if(pins && Array.isArray(pins)){
-        let features = [];
-        // #-- loop over all pins
-        pins.forEach(pin => {
-            // #-- check that pin has geocoords
-            if(pin['geocoords']){
 
-                let coords = pin['geocoords'].split(',');
-                // #-- check that coords are not empty
-                if(coords[0] !== ''){
-                    // #-- build address
-                    let address = pin['street'] + '<br>' + pin['zip'] + ' ' + pin['city'];
-                    if(pin['phone']) address += '<br><br>' + pin['phone'];
-                    if(pin['email']) address += '<br><br><a href="mailto:' + pin['email'] + '" >' + pin['email'] + '</a>';
-                    if(pin['www']) address += '<br><a href="' + pin['www'] + '" target="_blank">' + pin['www'] + '</a>';
+        $(document).ready(function() {
+            // #-- initialise isotope
+            const grid = $('#memberList').isotope({
+                itemSelector: '.member-list-item',
+                layoutMode: 'packery',
+                packery: {
+                    gutter: '.member-list-gutter-sizer'
+                },
+                percentPosition: true
+            });
 
-                    // #-- create feature/pin markers
-                    let iconFeature = new ol.Feature({
-                        type: 'icon',
-                        geometry: new ol.geom.Point(ol.proj.fromLonLat([parseFloat(coords[1]),parseFloat(coords[0])])),
-                        name: pin['name'],
-                        address: address,
-                    });
+            //#-- expand listItems on click
+            grid.on('click', '.member-list-item .expand-btn', function() {
+                $( this ).closest('.member-list-item').toggleClass('is-expanded');
+                grid.isotope('layout');
+            });
+        });
 
-                    // #-- add style to feature/pin marker
-                    let iconStyle = new ol.style.Style({
-                        image: new ol.style.Icon(({
-                            //anchor: [0, 0],
-                            src: 'files/theme/images/deleteMe/pin.png'
-                        }))
-                    });
-                    iconFeature.setStyle(iconStyle);
-                    // #-- add feature/pin marker to array
-                    features.push(
-                        iconFeature
-                    );
+        // #-- Isotope Grid Filter
+        function filterIsotope(filter, element){
+            if (element) {
+                $('.member-filter-btn').removeClass('active');
+                $(element).addClass('active');
+            }
+            $('.member-list').isotope({
+                filter : filter === '*' ? '*' : '.' + filter,
+            });
+            filterMap(filter);
+        }
+
+        function filterIsotopeBySelect(value) {
+            filterIsotope(value);
+        }
+
+        // #-- filter map features/pin markers
+        function filterMap(filter){
+            // #-- check if map is there
+            if(globalMap !== undefined){
+                // #-- remove old vector layer with features/pin markers from map
+                globalMap.getLayers().getArray()
+                    .filter(layer => layer.type === 'VECTOR')
+                    .forEach(layer => globalMap.removeLayer(layer))
+                ;
+
+                let features = [];
+                let extent = ol.extent.createEmpty();
+
+                // #-- loop over all pins
+                pins.forEach(pin => {
+                    // #-- check that pin has geocoords and is in filter
+                    if (pin['geocoords'] &&
+                        (filter === '*' || (pin['businesstype'] && parseInt(pin['businesstype']) === filter))) {
+
+                        let coords = pin['geocoords'].split(',');
+                        // #-- check that coords are not empty
+                        if (coords[0]) {
+                            // #-- build address
+                            let address = pin['street'] + '<br>' + pin['zip'] + ' ' + pin['city'];
+                            if (pin['phone']) address += '<br><br>' + pin['phone'];
+                            if (pin['email']) address += '<br><br><a href="mailto:' + pin['email'] + '" >' + pin['email'] + '</a>';
+                            if (pin['www']) address += '<br><a href="' + pin['www'] + '" target="_blank">' + pin['www'] + '</a>';
+
+                            // #-- create feature/pin markers
+                            let iconFeature = new ol.Feature({
+                                type: 'icon',
+                                geometry: new ol.geom.Point(ol.proj.fromLonLat([parseFloat(coords[1]), parseFloat(coords[0])])),
+                                name: pin['name'],
+                                address: address,
+                            });
+
+                            // #-- add style to feature/pin marker
+                            let iconStyle = new ol.style.Style({
+                                image: new ol.style.Icon(({
+                                    //anchor: [0, 0],
+                                    src: 'files/theme/images/deleteMe/pin.png'
+                                }))
+                            });
+                            iconFeature.setStyle(iconStyle);
+
+                            // #-- add features extend for map fitting
+                            ol.extent.extend(extent, iconFeature.getGeometry().getExtent());
+
+                            // #-- add feature/pin marker to array
+                            features.push(
+                                iconFeature
+                            );
+                        }
+
+                    }
+                });
+
+                // #-- create feature/pin marker layer
+                let vectorSource = new ol.source.Vector({
+                    features: features
+                });
+                let vectorLayer = new ol.layer.Vector({
+                    source: vectorSource
+                });
+
+                // #-- add layer to map
+                globalMap.addLayer(vectorLayer);
+
+                // #-- fit map to features/pin markers
+                if(features.length > 0){
+                    globalMap.getView().fit(extent, {padding: [5, 5, 5, 5], minResolution: 5});
                 }
-
             }
-        });
+        }
 
-        // #-- create feature/pin marker layer
-        let vectorSource = new ol.source.Vector({
-            features: features
-        });
-        let vectorLayer = new ol.layer.Vector({
-            source: vectorSource
-        });
+        function showMap(){
 
-        // #-- create map
-        const map = new ol.Map({
-            target: 'map',
-            layers: [
-                new ol.layer.Tile({
-                    source: new ol.source.OSM()
-                }),
-                vectorLayer
-            ],
-            view: new ol.View({
-                center: ol.proj.fromLonLat([<?=$this->center['lon']?>, <?=$this->center['lat']?>]),
-                zoom: <?=$this->center['zoom']?>
-            })
-        });
+            // #-- hide show map button
+            const showMapBtn = $('.show-map-btn');
+            showMapBtn.css('display','none');
 
-        // #-- get popup element
-        const element = document.getElementById('popup');
+            let features = [];
+            // #-- loop over all pins
+            pins.forEach(pin => {
+                // #-- check that pin has geocoords
+                if(pin['geocoords']){
 
-        // #-- create popup overlay
-        const popup = new ol.Overlay({
-            element: element,
-            positioning: 'bottom-center',
-            stopEvent: false,
-            offset: [0, 0]
-        });
-        map.addOverlay(popup);
+                    let coords = pin['geocoords'].split(',');
+                    // #-- check that coords are not empty
+                    if(coords[0] !== ''){
+                        // #-- build address
+                        let address = pin['street'] + '<br>' + pin['zip'] + ' ' + pin['city'];
+                        if(pin['phone']) address += '<br><br>' + pin['phone'];
+                        if(pin['email']) address += '<br><br><a href="mailto:' + pin['email'] + '" >' + pin['email'] + '</a>';
+                        if(pin['www']) address += '<br><a href="' + pin['www'] + '" target="_blank">' + pin['www'] + '</a>';
 
-        // #-- display popup on click
-        map.on('click', function(evt) {
-            // #-- check if a feature/pin marker was clicked
-            const feature = map.forEachFeatureAtPixel(evt.pixel,
-                function(feature) {
-                    return feature;
-                });
-            if (feature) {
-                let coordinates = feature.getGeometry().getCoordinates();
-                popup.setPosition(coordinates);
+                        // #-- create feature/pin markers
+                        let iconFeature = new ol.Feature({
+                            type: 'icon',
+                            geometry: new ol.geom.Point(ol.proj.fromLonLat([parseFloat(coords[1]),parseFloat(coords[0])])),
+                            name: pin['name'],
+                            address: address,
+                        });
 
-                // #-- dispose old popover
-                $(element).popover('dispose');
+                        // #-- add style to feature/pin marker
+                        let iconStyle = new ol.style.Style({
+                            image: new ol.style.Icon(({
+                                //anchor: [0, 0],
+                                src: 'files/theme/images/deleteMe/pin.png'
+                            }))
+                        });
+                        iconFeature.setStyle(iconStyle);
+                        // #-- add feature/pin marker to array
+                        features.push(
+                            iconFeature
+                        );
+                    }
 
-                // #-- init new popover
-                $(element).popover({
-                    placement: 'top',
-                    html: true,
-                    title: feature.get('name'),
-                    content: feature.get('address'),
-                });
-                $(element).popover('show');
+                }
+            });
 
-            } else {
-                // #-- dispose old popover
-                $(element).popover('dispose');
-            }
-        });
+            // #-- create feature/pin marker layer
+            let vectorSource = new ol.source.Vector({
+                features: features
+            });
+            let vectorLayer = new ol.layer.Vector({
+                source: vectorSource
+            });
 
-        // #-- change mouse cursor when over feature/pin marker
-        map.on('pointermove', function(e) {
-            // #-- remove popover when map is dragged
-            if (e.dragging) {
-                $(element).popover('dispose');
-                return;
-            }
-            let pixel = map.getEventPixel(e.originalEvent);
-            let hit = map.hasFeatureAtPixel(pixel);
+            // #-- get popup element
+            const element = document.getElementById('popup');
 
-            $('#' + map.getTarget()).css('cursor', hit ? 'pointer' : 'default');
-        });
+            // #-- create map
+            const map = new ol.Map({
+                target: 'map',
+                layers: [
+                    new ol.layer.Tile({
+                        source: new ol.source.OSM()
+                    }),
+                    vectorLayer
+                ],
+                view: new ol.View({
+                    center: ol.proj.fromLonLat([<?=$this->center['lon']?>, <?=$this->center['lat']?>]),
+                    zoom: <?=$this->center['zoom']?>
+                })
+            });
+            globalMap = map;
+
+            // #-- create popup overlay
+            const popup = new ol.Overlay({
+                element: element,
+                positioning: 'bottom-center',
+                stopEvent: false,
+                offset: [0, 0]
+            });
+            map.addOverlay(popup);
+
+            // #-- display popup on click
+            map.on('click', function(evt) {
+                // #-- check if a feature/pin marker was clicked
+                const feature = map.forEachFeatureAtPixel(evt.pixel,
+                    function(feature) {
+                        return feature;
+                    });
+                if (feature) {
+                    let coordinates = feature.getGeometry().getCoordinates();
+                    popup.setPosition(coordinates);
+
+                    // #-- dispose old popover
+                    $(element).popover('dispose');
+
+                    // #-- init new popover
+                    $(element).popover({
+                        placement: 'top',
+                        html: true,
+                        title: feature.get('name'),
+                        content: feature.get('address'),
+                    });
+                    $(element).popover('show');
+
+                } else {
+                    // #-- dispose old popover
+                    $(element).popover('dispose');
+                }
+            });
+
+            // #-- change mouse cursor when over feature/pin marker
+            map.on('pointermove', function(e) {
+                // #-- remove popover when map is dragged
+                if (e.dragging) {
+                    $(element).popover('dispose');
+                    return;
+                }
+                let pixel = map.getEventPixel(e.originalEvent);
+                let hit = map.hasFeatureAtPixel(pixel);
+
+                $('#' + map.getTarget()).css('cursor', hit ? 'pointer' : 'default');
+            });
+        }
     }
 </script>
 

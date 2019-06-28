@@ -63,7 +63,7 @@ class SelectPinElement extends \Contao\ContentElement
     {
         #-- overwrite default templates
         if ($this->hm_template) {
-            $this->strTemplate = $this->hm_template;
+            $this->Template = new \Contao\FrontendTemplate($this->hm_template);
         }
 
         #-- get pin

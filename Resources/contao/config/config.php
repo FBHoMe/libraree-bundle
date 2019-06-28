@@ -19,7 +19,9 @@ array_insert($GLOBALS['BE_MOD']['content'], 3 ,[
 array_insert($GLOBALS['TL_CTE'], 2, array
 (
     'libraree' => array(
+        'lib_list' => 'Home\LibrareeBundle\Resources\contao\elements\BaseListElement',
         'select_pin' => 'Home\LibrareeBundle\Resources\contao\elements\SelectPinElement',
+        'dyn_lib_list' => 'Home\LibrareeBundle\Resources\contao\elements\DynListElement',
         'proximity_map' => 'Home\LibrareeBundle\Resources\contao\elements\ProximityMap',
     )
 ));

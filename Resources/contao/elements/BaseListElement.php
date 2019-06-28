@@ -8,8 +8,7 @@
 
 namespace Home\LibrareeBundle\Resources\contao\elements;
 
-use Home\LibrareeBundle\Resources\contao\models\ProducteePortfolioModel;
-use Home\LibrareeBundle\Resources\contao\models\ProducteePinModel;
+use Home\LibrareeBundle\Resources\contao\models\BasePinModel;
 
 class BaseListElement extends \Contao\ContentElement
 {
@@ -34,6 +33,16 @@ class BaseListElement extends \Contao\ContentElement
         if (TL_MODE == 'BE') {
             $this->generateBackend();
         } else {
+            #-- overwrite default templates
+            if ($this->hm_template) {
+                $this->Template = new \Contao\FrontendTemplate($this->hm_template);
+            }
+
+            #-- check if pin order is set
+            if($GLOBALS['libraree']['pinOrder'] === null){
+                $GLOBALS['libraree']['pinOrder'] = 'id DESC';
+            }
+
             $this->generateFrontend();
         }
     }
@@ -54,46 +63,47 @@ class BaseListElement extends \Contao\ContentElement
      */
     private function generateFrontend()
     {
-        $portfolios = $this->findAllPortfolios();
-        $pins = $this->findAllRelatedPins($portfolios);
+        #-- get pins by portfolio id or all pins
+        if($this->lib_pid){
+            $pins = $this->getPinsByPid($this->lib_table, $this->lib_pid);
+        }else{
+            $pins = $this->getPins($this->lib_table);
+        }
 
-        $this->Template->portfolios = $portfolios;
         $this->Template->pins = $pins;
     }
 
     /**
-     * @return \Contao\Model\Collection|null
+     * get pins by portfolio id
+     *
+     * @param $table
+     * @param $pid
+     * @return array|null
      */
-    private function findAllPortfolios()
+    private function getPinsByPid($table, $pid)
     {
-        return null;
-    }
+        $strColumn = array(
+            $table . '_pin.published = 1',
+            $table . '_pin.pid = ?'
+        );
+        $options = array('order'=>$GLOBALS['libraree']['pinOrder']);
 
+        return BasePinModel::findByTable($table, $strColumn, $pid, $options);
+    }
 
     /**
-     * find all related pins by pid
-     * @param \Contao\Model\Collection $portfolios
-     * @return bool|\Contao\Model\Collection|null|static
+     * get all pins
+     *
+     * @param $table
+     * @return array|null
      */
-    private function findAllRelatedPins($portfolios)
+    private function getPins($table)
     {
-        $pids = [];
+        $strColumn = array(
+            $table . '_pin.published = 1',
+        );
+        $options = array('order'=>$GLOBALS['libraree']['pinOrder']);
 
-        #-- get id of all portfolios
-        if(isset($portfolios)){
-            $models = $portfolios->getModels();
-            foreach ($models as $model){
-                $pids[] = $model->__get('id');
-            }
-        }
-
-        /*if(count($pids) > 0){
-            return Model::findBy(array(
-                Model::getTable() . ".pid IN('" . implode("','", $pids) . "')"), null
-            );
-        }*/
-
-        return false;
+        return BasePinModel::findByTable($table, $strColumn, null, $options);
     }
-
 }

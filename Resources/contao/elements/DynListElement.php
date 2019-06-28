@@ -58,6 +58,11 @@ class DynListElement extends BaseListElement
      */
     private function generateFrontend()
     {
+        #-- overwrite default templates
+        if ($this->hm_template) {
+            $this->Template = new \Contao\FrontendTemplate($this->hm_template);
+        }
+
         #-- check if pin/portfolio order is set
         if($GLOBALS['libraree']['pinOrder'] === null){
             $GLOBALS['libraree']['pinOrder'] = 'id DESC';

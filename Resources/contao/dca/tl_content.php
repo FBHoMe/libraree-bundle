@@ -54,12 +54,25 @@ try{
         #-- taxonomy id
         ->addField('text', 'lib_tax_id')
 
+        #-- pid
+        ->addField('text', 'lib_pid')
+
+        #-- base lib list
+        ->copyPalette('default', 'lib_list')
+        ->addPaletteGroup('lib_list', array(
+            'lib_table',
+            'lib_pid',
+            'lib_nav_href',
+            'hm_template',
+        ), 'lib_list')
+
         #-- dyn lib list
-        ->copyPalette('default', 'dyn_lib_list_cte')
-        ->addPaletteGroup('dyn_lib_list_cte', array(
-            'lib_nav_table',
-            'lib_nav_href'
-        ), 'dyn_lib_list_cte')
+        ->copyPalette('default', 'dyn_lib_list')
+        ->addPaletteGroup('dyn_lib_list', array(
+            'lib_table',
+            'lib_nav_href',
+            'hm_template',
+        ), 'dyn_lib_list')
 
         #-- select pin
         ->copyPalette('default', 'select_pin')

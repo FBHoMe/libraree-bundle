@@ -85,6 +85,8 @@ $taxonomies = $this->categories;
     // #-- get pins from php
     let pins = <?=json_encode($this->pins)?>;
     let globalMap = undefined;
+    // #-- get popup element
+    const element = document.getElementById('popup');
 
     if(pins && Array.isArray(pins)){
 
@@ -126,6 +128,9 @@ $taxonomies = $this->categories;
         function filterMap(filter){
             // #-- check if map is there
             if(globalMap !== undefined){
+                // #-- dispose old popover
+                $(element).popover('dispose');
+
                 // #-- remove old vector layer with features/pin markers from map
                 globalMap.getLayers().getArray()
                     .filter(layer => layer.type === 'VECTOR')
@@ -251,9 +256,6 @@ $taxonomies = $this->categories;
                 source: vectorSource
             });
 
-            // #-- get popup element
-            const element = document.getElementById('popup');
-
             // #-- create map
             const map = new ol.Map({
                 target: 'map',
@@ -323,4 +325,3 @@ $taxonomies = $this->categories;
         }
     }
 </script>
-

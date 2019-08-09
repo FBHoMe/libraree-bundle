@@ -1,8 +1,9 @@
 <?php
 $taxonomies = $this->categories;
 ?>
-<button class="show-map-btn" onclick="showMap()">Open Street Map anzeigen</button>
+
 <div id="map" class="map">
+    <button class="show-map-btn btn" onclick="showMap()">Open Street Map anzeigen</button>
     <div id="popup"></div>
 </div>
 
@@ -52,12 +53,12 @@ $taxonomies = $this->categories;
                     <div>
                         <div class="layout-row">
                             <div class="flex-90">
-                                <?php if ($member['picture'] && is_array($member['picture'])): ?>
+                                <?php if ($member['picture']): ?>
                                     <div class="member-logo layout-padding hm-l-step-bottom">
-                                        <img src="<?= $member['picture']['path']; ?>">
+                                        <img src="<?= \FilesModel::findByUuid($member['picture'])->path ; ?>">
                                     </div>
                                 <?php endif; ?>
-                                <div class="businesstype meta-txt italic"><?= $taxonomies[$member['businesstype']]['name']; ?></div>
+                                <div class="businesstype hm-txt-meta italic"><?= $taxonomies[$member['businesstype']]['name']; ?></div>
                                 <h4><?= $member['title']; ?></h4>
                             </div>
                             <div class="flex-10">
@@ -65,7 +66,7 @@ $taxonomies = $this->categories;
                             </div>
                         </div>
 
-                        <div class="member-details meta-txt">
+                        <div class="member-details hm-txt-meta">
                             <span class="kurzbeschreibung strong"><?= $member['kurzbeschreibung']; ?></span><br>
                             <span class="street"><?= $member['street']; ?></span><br>
                             <span class="address"><?= $member['zip']; ?> <?= $member['city']; ?></span><br>
@@ -98,7 +99,13 @@ $taxonomies = $this->categories;
                 packery: {
                     gutter: '.member-list-gutter-sizer'
                 },
-                percentPosition: true
+                percentPosition: true,
+                sortBy: 'name',
+                getSortData: {
+                    name: function(itemElem){
+                        return $(itemElem).find('h4').text();
+                    }
+                }
             });
 
             //#-- expand listItems on click
@@ -166,8 +173,8 @@ $taxonomies = $this->categories;
                             // #-- add style to feature/pin marker
                             let iconStyle = new ol.style.Style({
                                 image: new ol.style.Icon(({
-                                    //anchor: [0, 0],
-                                    src: 'files/theme/images/deleteMe/pin.png'
+                                    src: 'files/theme/images/Location-Pin.png',
+                                    scale: 0.5,
                                 }))
                             });
                             iconFeature.setStyle(iconStyle);
@@ -234,8 +241,8 @@ $taxonomies = $this->categories;
                         // #-- add style to feature/pin marker
                         let iconStyle = new ol.style.Style({
                             image: new ol.style.Icon(({
-                                //anchor: [0, 0],
-                                src: 'files/theme/images/deleteMe/pin.png'
+                                src: 'files/theme/images/Location-Pin.png',
+                                scale: 0.5,
                             }))
                         });
                         iconFeature.setStyle(iconStyle);
